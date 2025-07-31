@@ -72,12 +72,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Tag as latest on main branch
-        if: github.ref == 'refs/heads/main'
-        run: |
-          docker tag ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }} ${{ env.DOCKER_IMAGE_NAME }}:latest
-          docker push ${{ env.DOCKER_IMAGE_NAME }}:latest
-
   tofu-plan:
     name: Tofu Plan
     runs-on: ubuntu-latest
