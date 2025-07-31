@@ -1,0 +1,70 @@
+name: Tofu Backend Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'init'
+        type: choice
+        options:
+        - init
+        - plan
+        - apply
+        - destroy
+
+jobs:
+  tofu-backend:
+    name: Tofu Backend Operations
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Tofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: "1.6.0"
+
+      - name: Configure Tofu Backend
+        run: |
+          cd Tofu/IaC
+          tofu init -reconfigure \
+            -backend-config="address=https://api.github.com/repos/${{ github.repository }}/state/default" \
+            -backend-config="lock_address=https://api.github.com/repos/${{ github.repository }}/state/default/lock" \
+            -backend-config="unlock_address=https://api.github.com/repos/${{ github.repository }}/state/default/lock" \
+            -backend-config="username=${{ github.actor }}" \
+            -backend-config="password=${{ secrets.GITHUB_TOKEN }}" \
+            -backend-config="lock_method=POST" \
+            -backend-config="unlock_method=DELETE" \
+            -backend-config="retry_wait_min=5"
+
+      - name: Execute Tofu Action
+        run: |
+          cd Tofu/IaC
+          case "${{ github.event.inputs.action }}" in
+            "init")
+              echo "Initializing Tofu..."
+              tofu init
+              ;;
+            "plan")
+              echo "Planning Tofu changes..."
+              tofu plan -out=tfplan
+              ;;
+            "apply")
+              echo "Applying Tofu changes..."
+              tofu apply --auto-approve
+              ;;
+            "destroy")
+              echo "Destroying infrastructure..."
+              tofu destroy --auto-approve
+              ;;
+            *)
+              echo "Unknown action: ${{ github.event.inputs.action }}"
+              exit 1
+              ;;
+          esac
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
