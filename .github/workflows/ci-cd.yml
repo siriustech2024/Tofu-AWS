@@ -86,31 +86,28 @@ jobs:
         with:
           tofu_version: "1.6.0"
 
-      - name: Configure Tofu Backend
+      - name: Initialize Tofu
         run: |
           cd Tofu/IaC
-          tofu init -reconfigure \
-            -backend-config="address=https://api.github.com/repos/${{ github.repository }}/state/default" \
-            -backend-config="lock_address=https://api.github.com/repos/${{ github.repository }}/state/default/lock" \
-            -backend-config="unlock_address=https://api.github.com/repos/${{ github.repository }}/state/default/lock" \
-            -backend-config="username=${{ github.actor }}" \
-            -backend-config="password=${{ secrets.GITHUB_TOKEN }}" \
-            -backend-config="lock_method=POST" \
-            -backend-config="unlock_method=DELETE" \
-            -backend-config="retry_wait_min=5"
+          tofu init
 
       - name: Tofu Plan
         run: |
           cd Tofu/IaC
           tofu plan -out=tfplan
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Tofu Plan
         uses: actions/upload-artifact@v4
         with:
           name: tofu-plan
           path: Tofu/IaC/tfplan
+
+      - name: Upload State File
+        uses: actions/upload-artifact@v4
+        with:
+          name: tofu-state
+          path: Tofu/IaC/terraform.tfstate
+          if-no-files-found: ignore
 
   tofu-apply:
     name: Tofu Apply
@@ -127,18 +124,10 @@ jobs:
         with:
           tofu_version: "1.6.0"
 
-      - name: Configure Tofu Backend
+      - name: Initialize Tofu
         run: |
           cd Tofu/IaC
-          tofu init -reconfigure \
-            -backend-config="address=https://api.github.com/repos/${{ github.repository }}/state/default" \
-            -backend-config="lock_address=https://api.github.com/repos/${{ github.repository }}/state/default/lock" \
-            -backend-config="unlock_address=https://api.github.com/repos/${{ github.repository }}/state/default/lock" \
-            -backend-config="username=${{ github.actor }}" \
-            -backend-config="password=${{ secrets.GITHUB_TOKEN }}" \
-            -backend-config="lock_method=POST" \
-            -backend-config="unlock_method=DELETE" \
-            -backend-config="retry_wait_min=5"
+          tofu init
 
       - name: Download Tofu Plan
         uses: actions/download-artifact@v4
@@ -146,12 +135,23 @@ jobs:
           name: tofu-plan
           path: Tofu/IaC/
 
+      - name: Download State File
+        uses: actions/download-artifact@v4
+        with:
+          name: tofu-state
+          path: Tofu/IaC/
+          if-no-files-found: ignore
+
       - name: Tofu Apply
         run: |
           cd Tofu/IaC
           tofu apply tfplan
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Updated State
+        uses: actions/upload-artifact@v4
+        with:
+          name: tofu-state
+          path: Tofu/IaC/terraform.tfstate
 
   tofu-destroy:
     name: Tofu Destroy
@@ -168,22 +168,19 @@ jobs:
         with:
           tofu_version: "1.6.0"
 
-      - name: Configure Tofu Backend
+      - name: Initialize Tofu
         run: |
           cd Tofu/IaC
-          tofu init -reconfigure \
-            -backend-config="address=https://api.github.com/repos/${{ github.repository }}/state/default" \
-            -backend-config="lock_address=https://api.github.com/repos/${{ github.repository }}/state/default/lock" \
-            -backend-config="unlock_address=https://api.github.com/repos/${{ github.repository }}/state/default/lock" \
-            -backend-config="username=${{ github.actor }}" \
-            -backend-config="password=${{ secrets.GITHUB_TOKEN }}" \
-            -backend-config="lock_method=POST" \
-            -backend-config="unlock_method=DELETE" \
-            -backend-config="retry_wait_min=5"
+          tofu init
+
+      - name: Download State File
+        uses: actions/download-artifact@v4
+        with:
+          name: tofu-state
+          path: Tofu/IaC/
+          if-no-files-found: ignore
 
       - name: Tofu Destroy
         run: |
           cd Tofu/IaC
-          tofu destroy --auto-approve
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          tofu destroy -auto-approve 

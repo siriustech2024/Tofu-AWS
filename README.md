@@ -39,8 +39,17 @@ K8s/
 
 ## Infrastructure Setup
 
+### Backend Configuration
+This project uses a **local backend** for the Tofu state file by default. This means:
+- ✅ No lock issues or permission problems
+- ✅ Simpler setup and development
+- ✅ Works offline
+- ⚠️ State is shared between CI/CD jobs via artifacts
+
+If you need a remote backend (S3, GitHub, etc.), edit `Tofu/IaC/backend.tf` accordingly.
+
 ### 1. Configure Backend (Optional)
-Edit `Tofu/IaC/backend.tf` to set up your preferred remote state backend. By default, it uses an empty HTTP backend block.
+Edit `Tofu/IaC/backend.tf` to set up your preferred remote state backend. By default, it uses a local backend for simplicity and to avoid lock issues.
 
 ### 2. Initialize and Apply IaC
 You can use either OpenTofu or Terraform CLI. Example with OpenTofu:
@@ -48,11 +57,16 @@ You can use either OpenTofu or Terraform CLI. Example with OpenTofu:
 ```sh
 cd Tofu/IaC
 # Initialize providers and modules
-opentofu init
+tofu init
 # Review the plan
-opentofu plan
+tofu plan
 # Apply the infrastructure (creates VPC, EKS, etc.)
-opentofu apply
+tofu apply
+
+# Or use the convenience script:
+./scripts/local-dev.sh init
+./scripts/local-dev.sh plan
+./scripts/local-dev.sh apply
 ```
 
 > **Note:** The default region is `us-east-1`. You can change it in `main.tf` under `locals`.
@@ -74,8 +88,8 @@ docker run --rm -it \
   titan-tofu
 # Inside the container:
 cd /workspace
-opentofu init
-opentofu apply
+tofu init
+tofu apply
 ```
 
 ---
