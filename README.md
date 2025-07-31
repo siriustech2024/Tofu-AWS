@@ -141,7 +141,7 @@ opentofu destroy
 ---
 
 ## License
-Specify your license here.
+BSD-2
 
 ---
 
