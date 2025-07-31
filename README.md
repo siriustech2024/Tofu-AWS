@@ -1,8 +1,6 @@
-# Titan
+# Overview
 
-## Overview
-
-Titan is an Infrastructure as Code (IaC) project that provisions a complete AWS environment using [OpenTofu](https://opentofu.org/) (Terraform alternative) and deploys a managed Kubernetes cluster (EKS) with supporting networking resources. It also provides a sample Kubernetes deployment for testing and demonstration.
+An Infrastructure as Code (IaC) project that provisions a complete AWS environment using [OpenTofu](https://opentofu.org/) (Terraform alternative) and deploys a managed Kubernetes cluster (EKS) with supporting networking resources. It also provides a sample Kubernetes deployment for testing and demonstration.
 
 ---
 
